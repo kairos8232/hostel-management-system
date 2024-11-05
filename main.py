@@ -546,7 +546,23 @@ def room_setting():
 
     cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
-    # Fetch the latest booking for the user, including hostel name, room type, and bed letter
+    # Fetch the default trimester
+    cur.execute("""
+        SELECT id, term, name
+        FROM trimester
+        WHERE is_default = 1
+        LIMIT 1
+    """)
+    default_trimester = cur.fetchone()
+
+    if not default_trimester:
+        # If no default trimester is found, redirect to an appropriate page
+        flash('No default trimester is set.', 'error')
+        return redirect(url_for('select_trimester'))
+
+    default_trimester_id = default_trimester['id']
+
+    # Fetch the user's booking for the default trimester
     cur.execute("""
         SELECT b.*, h.name AS hostel_name, r.category AS room_type, bd.bed_letter, t.term AS trimester_term
         FROM booking b
@@ -554,29 +570,37 @@ def room_setting():
         JOIN rooms r ON b.room_no = r.number
         JOIN beds bd ON b.bed_number = bd.id
         JOIN trimester t ON b.trimester_id = t.id
-        WHERE b.user_id = %s
+        WHERE b.user_id = %s AND b.trimester_id = %s
         ORDER BY b.booking_no DESC
         LIMIT 1
-    """, (user_id,))
+    """, (user_id, default_trimester_id))
     booking = cur.fetchone()
 
-    # Fetch pending room swap requests for this user
+    # If no booking exists for the default trimester, redirect to select a trimester
+    if not booking:
+        flash('You do not have a booking in the current trimester.', 'info')
+        return redirect(url_for('select_trimester'))
+
+    # Fetch pending room swap requests for this user in the default trimester
     cur.execute("""
         SELECT rsr.*, u.name AS requester_name, b.room_no AS requester_room, b.bed_number AS requester_bed, bd.bed_letter AS requester_bed_letter
         FROM room_swap_requests rsr
         JOIN users u ON rsr.user_id = u.id
-        JOIN booking b ON rsr.user_id = b.user_id
+        JOIN booking b ON rsr.user_id = b.user_id AND b.trimester_id = %s
         JOIN beds bd ON b.bed_number = bd.id
         WHERE rsr.other_user_id = %s AND rsr.status = 'pending'
-    """, (user_id,))
+    """, (default_trimester_id, user_id))
     pending_swaps = cur.fetchall()
 
     cur.close()
 
-    if not booking:
-        return redirect(url_for('select_trimester'))
-
-    return render_template('room_setting.html', booking=booking, pending_swaps=pending_swaps, trimester_id=booking['trimester_id'])
+    # Render the template with booking information and default trimester
+    return render_template(
+        'room_setting.html',
+        booking=booking,
+        pending_swaps=pending_swaps,
+        default_trimester=default_trimester
+    )
 
 # Select Trimester Route
 @main.route('/student/select_trimester', methods=['GET', 'POST'])
