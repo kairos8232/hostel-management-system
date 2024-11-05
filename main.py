@@ -1878,9 +1878,21 @@ def delete_room(room_number):
 def admin_room_change_requests():
     cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
+    # Initialize user_trimester_id to None at the start
+    user_trimester_id = None
+
     if request.method == 'POST':
         request_id = request.form.get('request_id')
         action = request.form.get('action')
+
+        # Retrieve the trimester_id for the specific room change request
+        cur.execute("""
+            SELECT trimester_id
+            FROM room_change_requests
+            WHERE request_id = %s
+        """, (request_id,))
+        result = cur.fetchone()
+        user_trimester_id = result['trimester_id'] if result else None
 
         if action == 'approve':
             new_room_no = request.form.get('new_room_no')
@@ -1891,17 +1903,33 @@ def admin_room_change_requests():
                 return redirect(url_for('admin_room_change_requests'))
 
             try:
-                # Get the user's current booking and trimester
+                # Retrieve the user_id and trimester_id for the specific room change request
                 cur.execute("""
-                    SELECT b.trimester_id, b.room_no, b.bed_number, b.hostel_id
+                    SELECT user_id, trimester_id
+                    FROM room_change_requests
+                    WHERE request_id = %s
+                """, (request_id,))
+                result = cur.fetchone()
+                user_trimester_id = result['trimester_id'] if result else None
+                user_id = result['user_id'] if result else None
+
+                if not user_id or not user_trimester_id:
+                    flash('Invalid room change request.', 'error')
+                    return redirect(url_for('admin_room_change_requests'))
+
+                # Get the user's current booking for the specific trimester
+                cur.execute("""
+                    SELECT b.booking_no, b.trimester_id, b.room_no, b.bed_number, b.hostel_id
                     FROM booking b
-                    JOIN room_change_requests rcr ON b.user_id = rcr.user_id
-                    WHERE rcr.request_id = %s
+                    WHERE b.user_id = %s AND b.trimester_id = %s
                     ORDER BY b.booking_no DESC
                     LIMIT 1
-                """, (request_id,))
+                """, (user_id, user_trimester_id))
                 current_booking = cur.fetchone()
-                user_trimester_id = current_booking['trimester_id']
+
+                if not current_booking:
+                    flash('No existing booking found for this user and trimester.', 'error')
+                    return redirect(url_for('admin_room_change_requests'))
 
                 # Check if the new room and bed are already booked for this trimester
                 cur.execute("""
@@ -1916,17 +1944,25 @@ def admin_room_change_requests():
                     flash('The selected bed is already booked for this trimester.', 'error')
                     return redirect(url_for('admin_room_change_requests'))
 
+                # Get the hostel_id for the new room
+                cur.execute("""
+                    SELECT hostel_id
+                    FROM rooms
+                    WHERE number = %s
+                """, (new_room_no,))
+                room_info = cur.fetchone()
+                if not room_info:
+                    flash('Invalid room number selected.', 'error')
+                    return redirect(url_for('admin_room_change_requests'))
+
+                new_hostel_id = room_info['hostel_id']
+
                 # Proceed with updating the booking
                 cur.execute("""
-                    INSERT INTO booking (user_id, trimester_id, group_individual, group_id, hostel_id, room_no, cost, bed_number)
-                    SELECT user_id, %s, group_individual, group_id, %s, %s, cost, %s
-                    FROM booking
-                    WHERE booking_no = (
-                        SELECT MAX(booking_no)
-                        FROM booking
-                        WHERE user_id = (SELECT user_id FROM room_change_requests WHERE request_id = %s)
-                    )
-                """, (user_trimester_id, current_booking['hostel_id'], new_room_no, new_bed_letter, request_id))
+                    UPDATE booking
+                    SET room_no = %s, bed_number = %s, hostel_id = %s
+                    WHERE booking_no = %s
+                """, (new_room_no, new_bed_letter, new_hostel_id, current_booking['booking_no']))
 
                 # Update the room change request status
                 cur.execute("UPDATE room_change_requests SET status = 'approved' WHERE request_id = %s", (request_id,))
@@ -1960,8 +1996,8 @@ def admin_room_change_requests():
     """)
     requests = cur.fetchall()
 
-    # Fetch available rooms and beds (without needing a user trimester)
-    available_rooms, available_beds = get_available_rooms_and_beds(cur)
+    # Fetch available rooms and beds with the user_trimester_id
+    available_rooms, available_beds = get_available_rooms_and_beds(cur, user_trimester_id)
 
     cur.close()
 
@@ -1970,8 +2006,7 @@ def admin_room_change_requests():
                            available_rooms=available_rooms, 
                            available_beds=available_beds)
 
-
-def get_available_rooms_and_beds(cur):
+def get_available_rooms_and_beds(cur, user_trimester_id=None):
     # Fetch all rooms
     cur.execute("""
         SELECT r.number, r.hostel_id, h.name as hostel_name
@@ -1981,19 +2016,20 @@ def get_available_rooms_and_beds(cur):
     """)
     available_rooms = cur.fetchall()
 
-    # Fetch available beds for each room, excluding those already booked for any trimester
+    # Fetch beds for each room
     available_beds = {}
     for room in available_rooms:
         cur.execute("""
-            SELECT b.bed_letter
+            SELECT b.bed_letter, bk.trimester_id as occupant_trimester_id
             FROM beds b
             LEFT JOIN booking bk ON b.id = bk.bed_number AND bk.room_no = b.room_number
-            WHERE b.room_number = %s AND bk.trimester_id IS NULL
+            WHERE b.room_number = %s
             ORDER BY b.bed_letter
         """, (room['number'],))
         available_beds[room['number']] = cur.fetchall()
 
     return available_rooms, available_beds
+
 
 # Room Swap Request
 @main.route('/admin/room_swap_requests')

@@ -47,137 +47,154 @@
     </nav>
 
     <div class="content">
-      <h1>Room Change Requests</h1>
-      {% if requests %}
-          {% for request in requests %}
-              <div class="request-card">
-                  <h2>Request #{{ request.request_id }}</h2>
+        <h1>Room Change Requests</h1>
+        {% if requests %}
+            {% for request in requests %}
+                <div class="request-card">
+                    <h2>Request #{{ request.request_id }}</h2>
 
-                  <table class="request-table">
-                      <!-- User Details -->
-                      <tr>
-                          <th>Student ID</th>
-                          <th>Name</th>
-                          <th>Email</th>
-                          <th>Hostel</th>
-                          <th>Current Room</th>
-                          <th>Current Bed</th>
-                          <th>Trimester</th>
-                      </tr>
-                      <tr>
-                          <td>{{ request.user_id }}</td>
-                          <td>{{ request.name }}</td>
-                          <td>{{ request.email }}</td>
-                          <td>{{ request.hostel_name }}</td>
-                          <td>{{ request.room_no }}</td>
-                          <td>{{ request.bed_letter }}</td>
-                          <td>{{ request.trimester_term }}</td>
-                      </tr>
+                    <table class="request-table">
+                        <!-- User Details -->
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Hostel</th>
+                            <th>Current Room</th>
+                            <th>Current Bed</th>
+                            <th>Trimester</th>
+                        </tr>
+                        <tr>
+                            <td>{{ request.user_id }}</td>
+                            <td>{{ request.name }}</td>
+                            <td>{{ request.email }}</td>
+                            <td>{{ request.hostel_name }}</td>
+                            <td>{{ request.room_no }}</td>
+                            <td>{{ request.bed_letter }}</td>
+                            <td>{{ request.trimester_term }}</td>
+                        </tr>
 
-                      <!-- Reason for Room Change -->
-                      <tr>
-                          <td colspan="7"><strong>Reason: </strong><br>
-                              {{ request.reason }}</td>
-                      </tr>
+                        <!-- Reason for Room Change -->
+                        <tr>
+                            <td colspan="7"><strong>Reason: </strong><br>
+                                {{ request.reason }}</td>
+                        </tr>
 
-                      <!-- Approve/Reject Buttons -->
-                      <tr>
-                          <td colspan="7">
-                              <div class="button-row">
-                                  <button type="button" class="btn" onclick="showApproveOptions({{ request.request_id }})">Approve</button>
-                                  <form action="{{ url_for('admin_room_change_requests') }}" method="POST" style="display: inline;">
-                                      <input type="hidden" name="request_id" value="{{ request.request_id }}">
-                                      <button type="submit" name="action" value="reject" class="btn">Reject</button>
-                                  </form>
-                              </div>
-                          </td>
-                      </tr>
+                        <!-- Reject Button Form -->
+                        <tr>
+                            <td colspan="7">
+                                <div class="button-row">
+                                    <!-- Trigger to reveal approve options -->
+                                    <button type="button" class="btn" onclick="showApproveOptions({{ request.request_id }})">Approve</button>
 
-                      <!-- Approve Options -->
-                      <tr id="approveOptions{{ request.request_id }}" class="approve-options">
-                        <td colspan="4">
-                            <form action="{{ url_for('admin_room_change_requests') }}" method="POST">
-                                <label for="new_room_no{{ request.request_id }}">New Room:</label>
-                                <select name="new_room_no" id="new_room_no{{ request.request_id }}">
-                                    <option value="">Select a room</option>
-                                    {% for room in available_rooms %}
-                                        {% if room.hostel_id == request.hostel_id %}
-                                            <option value="{{ room.number }}">{{ room.number }} ({{ room.hostel_name }})</option>
-                                        {% endif %}
-                                    {% endfor %}
-                                </select>
-                        </td>
-                        <td colspan="3">  
-                            <label for="new_bed_letter{{ request.request_id }}">New Bed:</label>
-                            <select name="new_bed_letter" id="new_bed_letter{{ request.request_id }}">
-                                <option value="">Select a bed</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr id="approveOptionsRow{{ request.request_id }}" class="approve-options">
-                        <td colspan="7">
-                            <input type="hidden" name="request_id" value="{{ request.request_id }}">
-                            <button type="submit" name="action" value="approve" class="btn">Assign Bed and Approve</button>
-                            </form>
-                        </td>
-                    </tr>
-                  </table>
-              </div>
-          {% endfor %}
-      {% else %}
-          <div class="no-requests-message">
-              <h2>No Pending Room Change Requests</h2>
-              <p>There are currently no pending room change requests to process.</p>
-          </div>
-      {% endif %}
-  </div>
+                                    <!-- Reject Button Form -->
+                                    <form action="{{ url_for('admin_room_change_requests') }}" method="POST" style="display: inline;">
+                                        <input type="hidden" name="request_id" value="{{ request.request_id }}">
+                                        <button type="submit" name="action" value="reject" class="btn">Reject</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- Approve Options Form -->
+                    <form action="{{ url_for('admin_room_change_requests') }}" method="POST">
+                        <input type="hidden" name="request_id" value="{{ request.request_id }}">
+                        <input type="hidden" name="action" value="approve">
+
+                        <table class="request-table">
+                            <tr id="approveOptions{{ request.request_id }}" class="approve-options" style="display: none;">
+                                <td colspan="4">
+                                    <label for="new_room_no{{ request.request_id }}">New Room:</label>
+                                    <select name="new_room_no" id="new_room_no{{ request.request_id }}">
+                                        <option value="">Select a room</option>
+                                        {% for room in available_rooms %}
+                                            {% if room.hostel_id == request.hostel_id %}
+                                                <option value="{{ room.number }}">{{ room.number }} ({{ room.hostel_name }})</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td colspan="3">  
+                                    <label for="new_bed_letter{{ request.request_id }}">New Bed:</label>
+                                    <select name="new_bed_letter" id="new_bed_letter{{ request.request_id }}">
+                                        <option value="">Select a bed</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr id="approveOptionsRow{{ request.request_id }}" class="approve-options" style="display: none;">
+                                <td colspan="7">
+                                    <!-- Submit the form with this button -->
+                                    <button type="submit" class="btn">Assign Bed and Approve</button>
+                                </td>
+                            </tr>
+                        </table>
+                    </form>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-requests-message">
+                <h2>No Pending Room Change Requests</h2>
+                <p>There are currently no pending room change requests to process.</p>
+            </div>
+        {% endif %}
+    </div>
 </div>
 
 <script>
-  function showApproveOptions(requestId) {
-      document.getElementById('approveOptions' + requestId).style.display = 'table-row';
-      document.getElementById('approveOptionsRow' + requestId).style.display = 'table-row';
-  }
-
-  {% for request in requests %}
-      document.getElementById('new_room_no{{ request.request_id }}').addEventListener('change', function() {
-          var roomNumber = this.value;
-          var bedSelect = document.getElementById('new_bed_letter{{ request.request_id }}');
-          bedSelect.innerHTML = '<option value="">Select a bed</option>';
-
-          if (roomNumber) {
-              {% for room, beds in available_beds.items() %}
-                  if (roomNumber == '{{ room }}') {
-                      {% for bed in beds %}
-                          if ({{ bed.occupant_trimester_id }} == 0 || {{ bed.occupant_trimester_id }} != {{ request.trimester_id }}) {
-                              var option = document.createElement('option');
-                              option.value = '{{ bed.bed_letter }}';
-                              option.text = '{{ bed.bed_letter }}';
-                              if ({{ bed.occupant_trimester_id }} != 0) {
-                                  option.text += ' (Different Trimester)';
-                              }
-                              bedSelect.add(option);
-                          }
-                      {% endfor %}
-                  }
-              {% endfor %}
-          }
-      });
-
-      document.getElementById('new_bed_letter{{ request.request_id }}').addEventListener('change', function() {
-          var selectedOption = this.options[this.selectedIndex];
-          if (selectedOption.text.includes('Different Trimester')) {
-              alert('Note: This bed is currently occupied by a student from a different trimester.');
-          }
-      });
-  {% endfor %}
-
-  const flashMessages = document.querySelectorAll('.flash-message');
-  flashMessages.forEach(message => {
-    message.style.display = 'block';
-    setTimeout(() => {
-      message.style.display = 'none';
-    }, 3000); // Hide after 3 seconds
-  });
-</script>
+    function showApproveOptions(requestId) {
+        document.getElementById('approveOptions' + requestId).style.display = 'table-row';
+        document.getElementById('approveOptionsRow' + requestId).style.display = 'table-row';
+    }
+  
+    {% for request in requests %}
+        var roomSelect{{ request.request_id }} = document.getElementById('new_room_no{{ request.request_id }}');
+        var bedSelect{{ request.request_id }} = document.getElementById('new_bed_letter{{ request.request_id }}');
+  
+        if (roomSelect{{ request.request_id }}) {
+            roomSelect{{ request.request_id }}.addEventListener('change', function() {
+                var roomNumber = this.value;
+                var bedSelect = bedSelect{{ request.request_id }};
+                bedSelect.innerHTML = '<option value="">Select a bed</option>';
+  
+                if (roomNumber) {
+                    {% for room in available_rooms %}
+                        if (roomNumber == '{{ room.number }}') {
+                            {% for bed in available_beds[room.number] %}
+                                if ({{ bed.occupant_trimester_id or 0 }} == 0 || {{ bed.occupant_trimester_id or 0 }} != {{ request.trimester_id }}) {
+                                    var option = document.createElement('option');
+                                    option.value = '{{ bed.bed_letter }}';
+                                    option.text = '{{ bed.bed_letter }}';
+                                    if ({{ bed.occupant_trimester_id or 0 }} != 0) {
+                                        option.text += ' (Different Trimester)';
+                                    }
+                                    bedSelect.add(option);
+                                }
+                            {% endfor %}
+                        }
+                    {% endfor %}
+                }
+            });
+        }
+  
+        if (bedSelect{{ request.request_id }}) {
+            bedSelect{{ request.request_id }}.addEventListener('change', function() {
+                var selectedOption = this.options[this.selectedIndex];
+                if (selectedOption.text.includes('Different Trimester')) {
+                    alert('Note: This bed is currently occupied by a student from a different trimester.');
+                }
+            });
+        }
+    {% endfor %}
+  
+    // Flash messages handling
+    const flashMessages = document.querySelectorAll('.flash-message');
+    flashMessages.forEach(message => {
+      message.style.display = 'block';
+      setTimeout(() => {
+        message.style.display = 'none';
+      }, 3000); // Hide after 3 seconds
+    });
+  </script>
+  
 {% endblock %}
