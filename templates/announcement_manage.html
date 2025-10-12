@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/announcement-style.css') }}">
+{% endblock %}
+
+{% block content %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+  <div class="flash-container">
+    {% for category, message in messages %}
+      <div class="flash-message flash-{{ category }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+{% endif %}
+{% endwith %}
+
+<div class="manage-announcement-wrapper">
+    <div class="content">
+    <div class="d-flex justify-content-between align-items-center">
+        <h1>Manage Announcements</h1>
+        <a class="btn btn-primary" href="{{ url_for('create_announcement') }}">New Announcement</a>
+    </div>
+
+    {% if announcements %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Applies To</th>
+                    <th>Created</th>
+                    <th style="width: 160px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in announcements %}
+                    <tr>
+                        <td>{{ a.title }}</td>
+                        <td>
+                            {% if a.trimester_name %}
+                                {{ a.trimester_name }} (T{{ a.trimester_term }})
+                            {% else %}
+                                All trimesters
+                            {% endif %}
+                        </td>
+                        <td>{{ a.created_at.strftime('%Y-%m-%d %H:%M') if a.created_at else '' }}</td>
+                        <td>
+                            <a href="{{ url_for('edit_announcement', announcement_id=a.id) }}" class="btn btn-sm btn-secondary">Edit</a>
+                            <form method="post" action="{{ url_for('delete_announcement', announcement_id=a.id) }}" style="display:inline;" onsubmit="return confirm('Delete this announcement?');">
+                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No announcements yet.</p>
+    {% endif %}
+    </div>
+</div>
+
+<script>
+    const flashMessages = document.querySelectorAll('.flash-message');
+    flashMessages.forEach(message => {
+      message.style.display = 'block';
+      setTimeout(() => {
+        message.style.display = 'none';
+      }, 3000); // Hide after 3 seconds
+    });
+</script>
+
+{% endblock %}

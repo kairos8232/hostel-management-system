@@ -18,7 +18,7 @@
             {% if session.get('is_admin', False) %}
                 <!-- Admin Navigation -->
                 <a href="{{ url_for('admin_dashboard') }}">Home</a>
-                <a href="{{ url_for('post') }}">Announcement</a>
+                <a href="{{ url_for('manage_announcements') }}">Announcement</a>
                 <a href="{{ url_for('booking_listing') }}">Booking</a>
                 <a href="{{ url_for('add_student') }}">Student</a>
                 <a href="{{ url_for('admin_room_change_requests') }}">Room</a>

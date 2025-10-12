@@ -159,8 +159,30 @@ def home():
     """, (user_id,))
     invitation = cur.fetchone()
     
-    # Fetch announcements
-    cur.execute("SELECT * FROM announcement ORDER BY id DESC")
+    # Fetch announcements: show those for current trimester (if any set as default) and global (NULL trimester)
+    # Determine default trimester (if any)
+    cur.execute("SELECT * FROM trimester WHERE is_default = 1 LIMIT 1")
+    default_trimester = cur.fetchone()
+    default_trimester_id = default_trimester['id'] if default_trimester else None
+
+    # Announcements visible to students: those with matching trimester_id or NULL (all)
+    if default_trimester_id:
+        cur.execute(
+            """
+            SELECT * FROM announcement
+            WHERE trimester_id = %s OR trimester_id IS NULL
+            ORDER BY id DESC
+            """,
+            (default_trimester_id,)
+        )
+    else:
+        cur.execute(
+            """
+            SELECT * FROM announcement
+            WHERE trimester_id IS NULL
+            ORDER BY id DESC
+            """
+        )
     announcements = cur.fetchall()
     cur.close()
     
@@ -1491,20 +1513,89 @@ def admin_dashboard():
     return render_template('admin_dashboard.html', students=students, total_rooms=total_rooms, booked_rooms=booked_rooms, total_hostels=total_hostels, greeting=greeting, admin_name=admin_name)
 
 # Post Annoucement Route
-@main.route('/admin/post_annoucement', methods=['GET', 'POST'])
+@main.route('/admin/announcements')
 @admin_required
-def post():
+def manage_announcements():
+    cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cur.execute(
+        """
+        SELECT a.id, a.title, a.context, a.trimester_id, a.created_at,
+               t.name AS trimester_name, t.term AS trimester_term
+        FROM announcement a
+        LEFT JOIN trimester t ON a.trimester_id = t.id
+        ORDER BY a.id DESC
+        """
+    )
+    announcements = cur.fetchall()
+    cur.close()
+    return render_template('announcement_manage.html', announcements=announcements)
+
+@main.route('/admin/announcements/new', methods=['GET', 'POST'])
+@admin_required
+def create_announcement():
+    cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cur.execute("SELECT id, name, term FROM trimester ORDER BY id DESC")
+    trimesters = cur.fetchall()
+    cur.close()
     if request.method == 'POST':
-        userDetails = request.form
-        title = userDetails['title']
-        context = userDetails['context']
+        title = request.form.get('title', '').strip()
+        context_text = request.form.get('context', '').strip()
+        trimester_id = request.form.get('trimester_id') or None
+        if not title or not context_text:
+            flash('Title and content are required.', 'warning')
+            return render_template('announcement_form.html', trimesters=trimesters)
         cur = mysql.connection.cursor()
-        cur.execute("INSERT INTO announcement(title, context) VALUES(%s  , %s)", (title, context))
+        cur.execute(
+            "INSERT INTO announcement(title, context, trimester_id) VALUES(%s, %s, %s)",
+            (title, context_text, trimester_id)
+        )
         mysql.connection.commit()
         cur.close()
-        return redirect(url_for('post'))
-  
-    return render_template('post_announcement.html')
+        flash('Announcement created.', 'success')
+        return redirect(url_for('manage_announcements'))
+    return render_template('announcement_form.html', trimesters=trimesters)
+
+@main.route('/admin/announcements/<int:announcement_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def edit_announcement(announcement_id):
+    cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cur.execute("SELECT id, name, term FROM trimester ORDER BY id DESC")
+    trimesters = cur.fetchall()
+    cur.execute("SELECT * FROM announcement WHERE id = %s", (announcement_id,))
+    announcement = cur.fetchone()
+    if not announcement:
+        cur.close()
+        flash('Announcement not found.', 'danger')
+        return redirect(url_for('manage_announcements'))
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        context_text = request.form.get('context', '').strip()
+        trimester_id = request.form.get('trimester_id') or None
+        if not title or not context_text:
+            flash('Title and content are required.', 'warning')
+            return render_template('announcement_form.html', trimesters=trimesters, announcement=announcement)
+        cur2 = mysql.connection.cursor()
+        cur2.execute(
+            "UPDATE announcement SET title=%s, context=%s, trimester_id=%s WHERE id=%s",
+            (title, context_text, trimester_id, announcement_id)
+        )
+        mysql.connection.commit()
+        cur2.close()
+        cur.close()
+        flash('Announcement updated.', 'success')
+        return redirect(url_for('manage_announcements'))
+    cur.close()
+    return render_template('announcement_form.html', trimesters=trimesters, announcement=announcement)
+
+@main.route('/admin/announcements/<int:announcement_id>/delete', methods=['POST'])
+@admin_required
+def delete_announcement(announcement_id):
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM announcement WHERE id = %s", (announcement_id,))
+    mysql.connection.commit()
+    cur.close()
+    flash('Announcement deleted.', 'success')
+    return redirect(url_for('manage_announcements'))
 
 # Admin Edit Trimester
 @main.route('/admin/add_trimester', methods=['GET', 'POST'])

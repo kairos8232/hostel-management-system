@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/announcement-style.css') }}">
+{% endblock %}
+{% block content %}
+<div class="manage-announcement-wrapper">
+  <div class="content">
+  <h1>{{ 'Edit Announcement' if announcement else 'New Announcement' }}</h1>
+
+  <form method="post">
+    <div class="form-group">
+      <label for="title">Title</label>
+      <input id="title" name="title" class="form-control" required value="{{ (announcement.title if announcement) or '' }}" maxlength="100">
+    </div>
+
+    <div class="form-group">
+      <label for="context">Content</label>
+      <textarea id="context" name="context" class="form-control" rows="6" required>{{ (announcement.context if announcement) or '' }}</textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="trimester_id">Applies to</label>
+      <select id="trimester_id" name="trimester_id" class="form-control">
+        <option value="">All trimesters</option>
+        {% for t in trimesters %}
+          <option value="{{ t.id }}" {% if announcement and announcement.trimester_id == t.id %}selected{% endif %}>
+            {{ t.name }} (T{{ t.term }})
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-buttons">
+      <button type="submit" class="btn btn-primary">{{ 'Update' if announcement else 'Create' }}</button>
+      <a href="{{ url_for('manage_announcements') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+  </div>
+</div>
+{% endblock %}
