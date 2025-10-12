@@ -1172,13 +1172,7 @@ def booking_summary(mode, hostel_id, room_type, room_number, bed_ids, user_ids):
                 (assignment['user']['id'], trimester_id, 1 if mode == 'group' else 0, group_id, hostel_id, room_number, assignment['bed']['id'], room_info['price'])
             )
 
-        # Update room status if all beds are occupied
-        cur.execute("SELECT COUNT(*) as total, SUM(CASE WHEN status = 'Occupied' THEN 1 ELSE 0 END) as occupied FROM beds WHERE room_number = %s", (room_number,))
-        bed_status = cur.fetchone()
-        if bed_status['total'] == bed_status['occupied']:
-            cur.execute("UPDATE rooms SET status = 'Occupied' WHERE number = %s", (room_number,))
-        else:
-            cur.execute("UPDATE rooms SET status = 'Partially Occupied' WHERE number = %s", (room_number,))
+        # Note: room occupancy is derived from bookings elsewhere; no need to maintain rooms.status here.
 
         mysql.connection.commit()
         cur.close()
@@ -1745,7 +1739,6 @@ def add_room():
         hostel_id = request.form['hostel_id']
         category = request.form['category']
         price = request.form['price']
-        status = 'Available'
 
         if category == 'Single':
             capacity = 1
@@ -1766,9 +1759,9 @@ def add_room():
 
         try:
             cur.execute(''' 
-                INSERT INTO rooms (number, hostel_id, category, capacity, price, status) 
-                VALUES (%s, %s, %s, %s, %s, %s) 
-            ''', (number, hostel_id, category, capacity, price, status))
+                INSERT INTO rooms (number, hostel_id, category, capacity, price) 
+                VALUES (%s, %s, %s, %s, %s) 
+            ''', (number, hostel_id, category, capacity, price))
 
             for bed in beds:
                 cur.execute(''' 
@@ -1858,20 +1851,70 @@ def manage_rooms():
     cur.execute("SELECT id, name FROM hostel")
     hostels = cur.fetchall()
 
+    # Determine default trimester (for occupancy calculation)
+    cur.execute("SELECT id FROM trimester WHERE is_default = 1 LIMIT 1")
+    default_trimester = cur.fetchone()
+    default_trimester_id = default_trimester['id'] if default_trimester else None
+
     # Fetch rooms based on the selected hostel filter
     selected_hostel_id = request.args.get('hostel_id')
 
     if selected_hostel_id and selected_hostel_id != 'all':
         # If a specific hostel is selected, filter rooms by hostel_id
-        cur.execute('''SELECT rooms.*, hostel.name as hostel_name 
-                       FROM rooms 
-                       JOIN hostel ON rooms.hostel_id = hostel.id 
-                       WHERE rooms.hostel_id = %s''', (selected_hostel_id,))
+        if default_trimester_id:
+            cur.execute('''
+                SELECT rooms.*, hostel.name AS hostel_name,
+                       COALESCE(occ.occupied, 0) AS occupied_count
+                FROM rooms 
+                JOIN hostel ON rooms.hostel_id = hostel.id 
+                LEFT JOIN (
+                  SELECT room_no, hostel_id, COUNT(*) AS occupied
+                  FROM booking
+                  WHERE trimester_id = %s
+                  GROUP BY room_no, hostel_id
+                ) occ ON occ.room_no = rooms.number AND occ.hostel_id = rooms.hostel_id
+                WHERE rooms.hostel_id = %s
+            ''', (default_trimester_id, selected_hostel_id))
+        else:
+            cur.execute('''
+                SELECT rooms.*, hostel.name AS hostel_name,
+                       COALESCE(occ.occupied, 0) AS occupied_count
+                FROM rooms 
+                JOIN hostel ON rooms.hostel_id = hostel.id 
+                LEFT JOIN (
+                  SELECT room_no, hostel_id, COUNT(*) AS occupied
+                  FROM booking
+                  GROUP BY room_no, hostel_id
+                ) occ ON occ.room_no = rooms.number AND occ.hostel_id = rooms.hostel_id
+                WHERE rooms.hostel_id = %s
+            ''', (selected_hostel_id,))
     else:
         # If 'All Hostels' is selected or no hostel is selected, fetch all rooms
-        cur.execute('''SELECT rooms.*, hostel.name as hostel_name 
-                       FROM rooms 
-                       JOIN hostel ON rooms.hostel_id = hostel.id''')
+        if default_trimester_id:
+            cur.execute('''
+                SELECT rooms.*, hostel.name AS hostel_name,
+                       COALESCE(occ.occupied, 0) AS occupied_count
+                FROM rooms 
+                JOIN hostel ON rooms.hostel_id = hostel.id
+                LEFT JOIN (
+                  SELECT room_no, hostel_id, COUNT(*) AS occupied
+                  FROM booking
+                  WHERE trimester_id = %s
+                  GROUP BY room_no, hostel_id
+                ) occ ON occ.room_no = rooms.number AND occ.hostel_id = rooms.hostel_id
+            ''', (default_trimester_id,))
+        else:
+            cur.execute('''
+                SELECT rooms.*, hostel.name AS hostel_name,
+                       COALESCE(occ.occupied, 0) AS occupied_count
+                FROM rooms 
+                JOIN hostel ON rooms.hostel_id = hostel.id
+                LEFT JOIN (
+                  SELECT room_no, hostel_id, COUNT(*) AS occupied
+                  FROM booking
+                  GROUP BY room_no, hostel_id
+                ) occ ON occ.room_no = rooms.number AND occ.hostel_id = rooms.hostel_id
+            ''')
 
     rooms = cur.fetchall()
     cur.close()
@@ -2499,41 +2542,9 @@ def delete_booking(booking_no):
     booking = cur.fetchone()
     
     room_no = booking['room_no']
-    bed_letter = booking['bed_number']
-    room_category = booking['room_category']
     
     # Delete the booking from the 'booking' table
     cur.execute("DELETE FROM booking WHERE booking_no = %s", (booking_no,))
-    
-    # Mark the bed as 'Available'
-    cur.execute("""
-        UPDATE beds
-        SET status = 'Available'
-        WHERE room_number = %s AND bed_letter = %s
-    """, (room_no, bed_letter))
-
-    # Check the occupancy status of the room
-    cur.execute("""
-        SELECT COUNT(*) AS occupied_beds
-        FROM beds
-        WHERE room_number = %s AND status = 'Occupied'
-    """, (room_no,))
-    occupied_beds = cur.fetchone()['occupied_beds']
-    
-    # Determine the new room status based on bed occupancy and room category
-    if occupied_beds == 0:
-        new_room_status = 'Available'
-    elif (room_category == 'Double' and occupied_beds == 1) or (room_category == 'Triple' and occupied_beds < 3):
-        new_room_status = 'Partially Occupied'
-    else:
-        new_room_status = 'Occupied'
-    
-    # Update the room's status
-    cur.execute("""
-        UPDATE rooms
-        SET status = %s
-        WHERE number = %s
-    """, (new_room_status, room_no))
     
     mysql.connection.commit()
     

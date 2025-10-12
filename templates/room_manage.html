@@ -75,7 +75,7 @@
                     <th>Hostel</th>
                     <th>Category</th>
                     <th>Price</th>
-                    <th>Status</th>
+                    <th>Occupancy</th>
                     <th>Options</th>
                 </tr>
             </thead>
@@ -86,7 +86,7 @@
                     <td>{{ room.hostel_name }}</td>
                     <td>{{ room.category }}</td>
                     <td>{{ room.price }}</td>
-                    <td>{{ room.status }}</td>
+                    <td>{{ room.occupied_count|default(0) }}/{{ room.capacity }}</td>
                     <td>
                         <a href="{{ url_for('edit_room', room_number=room.number) }}" class="btn">Edit</a>
                         <form action="{{ url_for('delete_room', room_number=room.number) }}" method="POST">
