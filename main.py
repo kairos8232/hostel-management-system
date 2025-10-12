@@ -1556,7 +1556,30 @@ def manage_trimesters():
             return redirect(url_for('manage_trimesters'))
 
         elif action == 'remove_default':
-            cur.execute("UPDATE trimester SET is_default = FALSE WHERE is_default = TRUE")
+            # Find current default trimester
+            cur.execute("SELECT id FROM trimester WHERE is_default = TRUE LIMIT 1")
+            current_default = cur.fetchone()
+            if not current_default:
+                flash('No default trimester is currently set.', 'info')
+                return redirect(url_for('manage_trimesters'))
+
+            default_id = current_default['id']
+
+            # Block removal if there are pending or student-approved room change/swap requests in this trimester
+            cur.execute("""
+                SELECT 
+                  (SELECT COUNT(*) FROM room_change_requests WHERE trimester_id = %s AND status IN ('pending', 'approved_by_student')) 
+                  + (SELECT COUNT(*) FROM room_swap_requests   WHERE trimester_id = %s AND status IN ('pending', 'approved_by_student')) 
+                  AS pending_count
+            """, (default_id, default_id))
+            pending = cur.fetchone()
+
+            if pending and pending.get('pending_count', 0) > 0:
+                flash('There are pending room change or swap requests in this trimester.', 'error')
+                return redirect(url_for('manage_trimesters'))
+
+            # Safe to remove default flag
+            cur.execute("UPDATE trimester SET is_default = FALSE WHERE id = %s", (default_id,))
             flash('Default trimester removed successfully!', 'success')
             mysql.connection.commit()
             return redirect(url_for('manage_trimesters'))

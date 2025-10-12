@@ -153,3 +153,33 @@ h2 {
     color: #0c5460;
     border: 1px solid #bee5eb;
 }
+
+/* Status chips for responder approval visibility */
+.status-chip {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    background: #f0f0f0;
+    color: #333;
+}
+
+/* Right-align status chip in table header */
+.request-table th[colspan="3"] {
+    text-align: right;
+}
+.status-chip.approved {
+    background: #e6f7ed;
+    color: #0e7a3d;
+    border: 1px solid #a8e0bf;
+}
+.status-chip.pending {
+    background: #fff8e1;
+    color: #8a6d3b;
+    border: 1px solid #ffe08a;
+}
+.status-chip.rejected {
+    background: #fdecea;
+    color: #a94442;
+    border: 1px solid #f5c6cb;
+}

@@ -82,7 +82,14 @@
 
                         <!-- Responder Information -->
                         <tr>
-                            <th colspan="5">Responder</th>
+                            <th colspan="2">Responder</th>
+                            <th colspan="3">
+                                {% if request.status == 'approved_by_student' %}
+                                    <span class="status-chip approved">Responder approved ✓</span>
+                                {% elif request.status == 'pending' %}
+                                    <span class="status-chip pending">Awaiting responder approval…</span>
+                                {% endif %}
+                            </th>
                         </tr>
                         <tr>
                             <th>Student ID</th>
