@@ -188,18 +188,29 @@ def home():
     
     current_index = session.get('announcement_index', 0)
     total_announcements = len(announcements)
-    
-    if request.args.get('next'):
-        current_index = (current_index + 1) % total_announcements
-    elif request.args.get('back'):
-        current_index = (current_index - 1) % total_announcements
-    
+
+    # Allow selecting specific announcement via query param 'aid'
+    aid = request.args.get('aid', type=int)
+    if aid and total_announcements:
+        for idx, a in enumerate(announcements):
+            if a.get('id') == aid:
+                current_index = idx
+                break
+    else:
+        # Fallback to next/back navigation if provided
+        if request.args.get('next') and total_announcements:
+            current_index = (current_index + 1) % total_announcements
+        elif request.args.get('back') and total_announcements:
+            current_index = (current_index - 1) % total_announcements
+
     session['announcement_index'] = current_index
-    
+
     current_announcement = announcements[current_index] if announcements else None
-    
-    return render_template('home.html', 
-                           announcement=current_announcement, 
+
+    return render_template('home.html',
+                           announcements=announcements,
+                           announcement=current_announcement,
+                           current_index=current_index,
                            has_next=total_announcements > 1,
                            has_back=total_announcements > 1,
                            invitation=invitation,

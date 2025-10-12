@@ -1,12 +1,4 @@
-.container {
-    background-color: rgba(240, 240, 240, 0.79);
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    max-width: 85%;
-    margin: 30px auto;
-    align-items: center;
-}
+
 
 .content h1{
     font-size: 40px;
@@ -42,10 +34,52 @@
     border: 3px solid black;
 }
 
-.announcement {
-    height: 400px;
-    overflow-y: scroll;
-  }
+/* Announcements wrapper similar to chat */
+.announcements-wrapper {
+    background-color: #ffffff;
+    max-width: 1200px;
+    border-radius: 15px;
+    margin: 20px auto;
+    padding: 20px;
+    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+/* Two-pane announcements layout (30/70 flex) */
+.announcements-two-pane {
+    display: flex;
+    gap: 20px;
+    min-height: 380px;
+}
+
+.announcements-list {
+    width: 30%;
+    border-right: 1px solid #ccc;
+    overflow-y: auto;
+    background-color: #ffffff;
+    padding-right: 10px;
+}
+
+.announcement-item {
+    display: block;
+    padding: 10px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #111827;
+    border: 1px solid transparent;
+}
+.announcement-item + .announcement-item { margin-top: 8px; }
+.announcement-item:hover { background: #f3f4f6; border-color: #e5e7eb; }
+.announcement-item.active { background: #eef2ff; border-color: #c7d2fe; }
+.announcement-item .item-title { font-weight: 600; margin-bottom: 4px; }
+.announcement-item .item-snippet { font-size: 13px; color: #6b7280; }
+
+.announcement-detail {
+    width: 70%;
+    display: flex;
+    flex-direction: column;
+}
+.announcement-detail .detail-body { font-size: 16px; color: #374151; white-space: pre-wrap; }
 
 .navigation-buttons {
     display: flex;

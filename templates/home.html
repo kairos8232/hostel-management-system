@@ -25,29 +25,30 @@
 
 <div class="container">
     <div class="content">
-        <!-- Announcements Section -->
-        <h1>Announcements</h1>
-        <hr>
+    {% if announcements and announcements|length > 0 %}
+    <div class="announcements-wrapper">
+    <h2>Announcements</h2>
+    <div class="announcements-two-pane">
+            <aside class="announcements-list">
+                {% for a in announcements %}
+                <a class="announcement-item {% if a.id == (announcement.id if announcement) %}active{% endif %}"
+                   href="{{ url_for('home', aid=a.id) }}">
+                    <div class="item-title">{{ a.title }}</div>
+                    <div class="item-snippet">{{ a.context[:100] }}{% if a.context|length > 100 %}...{% endif %}</div>
+                </a>
+                {% endfor %}
+            </aside>
 
-        {% if announcement %}
-            <div class="announcement">
-                <h2>{{ announcement.title }}</h2>
-                <p>{{ announcement.context }}</p>
-            </div>
-            <div class="navigation-buttons">
-                {% if has_back %}
-                    <form method="get" action="{{ url_for('home') }}" style="display: inline;">
-                        <input type="hidden" name="back" value="1">
-                        <button type="submit" class="btn btn-secondary">Back</button>
-                    </form>
+            <section class="announcement-detail">
+                {% if announcement %}
+                    <h2>{{ announcement.title }}</h2>
+                    <div class="detail-body">{{ announcement.context }}</div>
+                {% else %}
+                    <p>No announcement selected.</p>
                 {% endif %}
-                {% if has_next %}
-                    <form method="get" action="{{ url_for('home') }}" style="display: inline;">
-                        <input type="hidden" name="next" value="1">
-                        <button type="submit" class="btn btn-primary">Next</button>
-                    </form>
-                {% endif %}
-            </div>
+            </section>
+        </div>
+        </div>
         {% else %}
             <p>No announcements available.</p>
         {% endif %}
