@@ -68,7 +68,7 @@ Students can book rooms, form groups, request swaps, and chat — while admins m
 ---
 
 ## 🧱 File Structure
-
+```bash
 eHostel/
 │
 ├── main.py               # Main Flask application
@@ -82,6 +82,7 @@ eHostel/
     ├── css/              # Per-page CSS
     ├── images/           # Profile and hostel images
     └── uploads/          # User-uploaded files
+```
 
 ---
 
