@@ -58,12 +58,18 @@ Students can book rooms, form groups, request swaps, and chat — while admins m
    python main.py
    ```
    The app runs at http://127.0.0.1:5000 by default.
-5. Default Admin Login
+5. Login Credentials
    ```yaml
-   username: admin
-   password: securepassword
+   # Admin Account
+   username: 1234
+   password: password1
    ```
-   (Password is hashed in DB — see flaskapp.sql for hash.)
+   ```yaml
+   # Student Accounts
+   username: 1–15
+   password: password1
+   ```
+   All student accounts (IDs 1 to 15) share the same default password for testing and demo purposes.
 
 ---
 
