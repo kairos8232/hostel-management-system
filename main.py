@@ -1890,9 +1890,9 @@ def add_room():
 
             for bed in beds:
                 cur.execute(''' 
-                    INSERT INTO beds (room_number, bed_letter, status) 
-                    VALUES (%s, %s, %s) 
-                ''', (number, bed, 'Available'))
+                    INSERT INTO beds (room_number, bed_letter) 
+                    VALUES (%s, %s) 
+                ''', (number, bed))
 
             mysql.connection.commit()
             flash('Room and beds added successfully!', 'success')
@@ -1949,8 +1949,8 @@ def edit_room(room_number):
                 for i in range(current_beds, capacity):
                     bed_letter = chr(65 + i)  # A, B, C
                     cur.execute('''
-                        INSERT INTO beds (room_number, bed_letter, status)
-                        VALUES (%s, %s, 'Available')
+                        INSERT INTO beds (room_number, bed_letter)
+                        VALUES (%s, %s)
                     ''', (room_number, bed_letter))
             elif current_beds > capacity:
                 cur.execute("DELETE FROM beds WHERE room_number = %s ORDER BY bed_letter DESC LIMIT %s", 
