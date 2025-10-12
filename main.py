@@ -448,14 +448,16 @@ def profile():
     user = cur.fetchone()
     cur.close()  # Close the cursor after fetching user data
 
+    # Determine profile picture URL (reuse context processor logic)
+    profile_pic_url = user[6] if user[6] else url_for('static', filename='images/default_profile_pic.jpg')
     return render_template('profile.html',
         name=user[1],
         student_id=user[0],
         gender=user[2],
         email=user[3],
         faculty=user[5],
-        image_url=user[6],
-        messages=get_flashed_messages(with_categories=True)  # Pass flash messages to the template
+        profile_pic_url=profile_pic_url,
+        messages=get_flashed_messages(with_categories=True)
     )
 
 # Edit Profile
@@ -1361,10 +1363,12 @@ def request_room_swap():
     cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     
     # Check if the other student exists and has the same hostel and is in the same trimester
+    # Include bed_letter for display (bed_number is the internal bed id)
     cur.execute("""
-        SELECT u.id, u.email, b.hostel_id, b.room_no, b.bed_number, b.trimester_id, t.term AS trimester_term
+        SELECT u.id, u.email, b.hostel_id, b.room_no, b.bed_number, bb.bed_letter, b.trimester_id, t.term AS trimester_term
         FROM users u
         JOIN booking b ON u.id = b.user_id
+        JOIN beds bb ON b.bed_number = bb.id
         JOIN trimester t ON b.trimester_id = t.id
         WHERE u.id = %s AND u.email = %s AND b.trimester_id = %s
     """, (other_student_id, other_student_email, trimester_id))
@@ -1920,9 +1924,9 @@ def admin_room_change_requests():
 
         if action == 'approve':
             new_room_no = request.form.get('new_room_no')
-            new_bed_letter = request.form.get('new_bed_letter')
+            new_bed_id = request.form.get('new_bed_id')
 
-            if not new_room_no or not new_bed_letter:
+            if not new_room_no or not new_bed_id:
                 flash('Please select both a room and a bed.', 'error')
                 return redirect(url_for('admin_room_change_requests'))
 
@@ -1955,13 +1959,25 @@ def admin_room_change_requests():
                     flash('No existing booking found for this user and trimester.', 'error')
                     return redirect(url_for('admin_room_change_requests'))
 
+                # Verify the selected bed belongs to the selected room
+                cur.execute(
+                    """
+                    SELECT id FROM beds WHERE id = %s AND room_number = %s
+                    """,
+                    (new_bed_id, new_room_no),
+                )
+                bed_match = cur.fetchone()
+                if not bed_match:
+                    flash('Selected bed does not belong to the chosen room.', 'error')
+                    return redirect(url_for('admin_room_change_requests'))
+
                 # Check if the new room and bed are already booked for this trimester
                 cur.execute("""
                     SELECT bk.trimester_id, bk.user_id
                     FROM booking bk
                     WHERE bk.room_no = %s AND bk.bed_number = %s AND bk.trimester_id = %s
                     LIMIT 1
-                """, (new_room_no, new_bed_letter, user_trimester_id))
+                """, (new_room_no, new_bed_id, user_trimester_id))
                 existing_booking = cur.fetchone()
 
                 if existing_booking:
@@ -1986,7 +2002,7 @@ def admin_room_change_requests():
                     UPDATE booking
                     SET room_no = %s, bed_number = %s, hostel_id = %s
                     WHERE booking_no = %s
-                """, (new_room_no, new_bed_letter, new_hostel_id, current_booking['booking_no']))
+                """, (new_room_no, new_bed_id, new_hostel_id, current_booking['booking_no']))
 
                 # Update the room change request status
                 cur.execute("UPDATE room_change_requests SET status = 'approved' WHERE request_id = %s", (request_id,))
@@ -2043,13 +2059,23 @@ def get_available_rooms_and_beds(cur, user_trimester_id=None):
     # Fetch beds for each room
     available_beds = {}
     for room in available_rooms:
-        cur.execute("""
-            SELECT b.bed_letter, bk.trimester_id as occupant_trimester_id
-            FROM beds b
-            LEFT JOIN booking bk ON b.id = bk.bed_number AND bk.room_no = b.room_number
-            WHERE b.room_number = %s
-            ORDER BY b.bed_letter
-        """, (room['number'],))
+        if user_trimester_id:
+            # show beds with occupant either none or in different trimester (allow override with warning)
+            cur.execute("""
+                SELECT b.id as bed_id, b.bed_letter, bk.trimester_id as occupant_trimester_id
+                FROM beds b
+                LEFT JOIN booking bk ON b.id = bk.bed_number AND bk.room_no = b.room_number
+                WHERE b.room_number = %s
+                ORDER BY b.bed_letter
+            """, (room['number'],))
+        else:
+            cur.execute("""
+                SELECT b.id as bed_id, b.bed_letter, bk.trimester_id as occupant_trimester_id
+                FROM beds b
+                LEFT JOIN booking bk ON b.id = bk.bed_number AND bk.room_no = b.room_number
+                WHERE b.room_number = %s
+                ORDER BY b.bed_letter
+            """, (room['number'],))
         available_beds[room['number']] = cur.fetchall()
 
     return available_rooms, available_beds
@@ -2061,22 +2087,23 @@ def get_available_rooms_and_beds(cur, user_trimester_id=None):
 def admin_room_swap_requests():
     cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     cur.execute("""
-        SELECT rsr.*, 
+        SELECT rsr.*,
                u1.name AS requester_name, u1.email AS requester_email,
                u2.name AS other_name, u2.email AS other_email,
-               b1.room_no AS requester_room, b1.bed_number AS requester_bed,
-               b2.room_no AS other_room, b2.bed_number AS other_bed,
+               b1.room_no AS requester_room, bb1.bed_letter AS requester_bed,
+               b2.room_no AS other_room, bb2.bed_letter AS other_bed,
                h.name AS hostel_name,
                t.term AS trimester_term
         FROM room_swap_requests rsr
         JOIN users u1 ON rsr.user_id = u1.id
         JOIN users u2 ON rsr.other_user_id = u2.id
-        JOIN booking b1 ON rsr.user_id = b1.user_id
-        JOIN booking b2 ON rsr.other_user_id = b2.user_id
+        JOIN booking b1 ON rsr.user_id = b1.user_id AND b1.trimester_id = rsr.trimester_id
+        JOIN booking b2 ON rsr.other_user_id = b2.user_id AND b2.trimester_id = rsr.trimester_id
+        JOIN beds bb1 ON b1.bed_number = bb1.id
+        JOIN beds bb2 ON b2.bed_number = bb2.id
         JOIN hostel h ON b1.hostel_id = h.id
-        JOIN trimester t ON rsr.trimester_id = t.id  -- Join with trimesters table
-        WHERE rsr.status = 'approved_by_student' 
-          AND b1.trimester_id = b2.trimester_id
+        JOIN trimester t ON rsr.trimester_id = t.id
+        WHERE rsr.status IN ('approved_by_student', 'pending')
         ORDER BY rsr.created_at ASC
     """)
     swap_requests = cur.fetchall()
@@ -2101,16 +2128,19 @@ def process_room_swap():
             WHERE swap_id = %s
         """, (swap_request_id,))
         swap_request = cur.fetchone()
-        
+
         if swap_request:
-            # Fetch current room and bed details for both users
+            # Fetch current room and bed details for both users (scoped to the swap's trimester)
             cur.execute("""
                 SELECT b1.room_no AS room1, b1.bed_number AS bed1,
                        b2.room_no AS room2, b2.bed_number AS bed2
                 FROM booking b1
-                JOIN booking b2 ON b1.user_id = %s AND b2.user_id = %s
-                WHERE b1.user_id = %s AND b2.user_id = %s AND b1.trimester_id = b2.trimester_id
-            """, (swap_request['user_id'], swap_request['other_user_id'], swap_request['user_id'], swap_request['other_user_id']))
+                JOIN booking b2 
+                  ON b2.user_id = %s
+                 AND b2.trimester_id = (SELECT trimester_id FROM room_swap_requests WHERE swap_id = %s)
+                WHERE b1.user_id = %s
+                  AND b1.trimester_id = (SELECT trimester_id FROM room_swap_requests WHERE swap_id = %s)
+            """, (swap_request['other_user_id'], swap_request_id, swap_request['user_id'], swap_request_id))
             rooms_beds = cur.fetchone()
 
             if rooms_beds:
@@ -2313,10 +2343,13 @@ def admin_profile():
     cur.execute("SELECT * FROM admin WHERE id = %s", (admin_id,))
     admin = cur.fetchone()
     
+    # Use a default admin profile image (or extend if you add image support)
+    profile_pic_url = url_for('static', filename='images/default_profile_pic.jpg')
     return render_template('admin_profile.html',
-        admin_id=admin[0],                         
+        admin_id=admin[0],
         name=admin[1],
         email=admin[2],
+        profile_pic_url=profile_pic_url
     )
 
 @main.route('/admin/change_password', methods=['GET', 'POST'])
@@ -2428,14 +2461,17 @@ def booking_listing():
         JOIN users u ON b.user_id = u.id
         JOIN trimester t ON b.trimester_id = t.id
         JOIN hostel h ON b.hostel_id = h.id
-        JOIN beds bd ON b.bed_number = bd.id 
-        LEFT JOIN room_change_requests rcr ON b.user_id = rcr.user_id
-        LEFT JOIN room_swap_requests rsr ON (b.user_id = rsr.user_id OR b.user_id = rsr.other_user_id)
-        WHERE (
-            (rcr.status IS NULL OR rcr.status != 'pending') -- Room change not pending
-            AND 
-            (rsr.status IS NULL OR rsr.status != 'pending') -- Room swap not pending for either user
+        JOIN beds bd ON b.bed_number = bd.id
+        WHERE NOT EXISTS (
+            SELECT 1 FROM room_change_requests rcr
+            WHERE rcr.user_id = b.user_id
+              AND rcr.status = 'pending'
         )
+          AND NOT EXISTS (
+            SELECT 1 FROM room_swap_requests rsr
+            WHERE (rsr.user_id = b.user_id OR rsr.other_user_id = b.user_id)
+              AND rsr.status = 'pending'
+          )
         ORDER BY b.booking_no DESC
     """)
     bookings = cur.fetchall()

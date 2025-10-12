@@ -5,12 +5,26 @@
 {% endblock %}
 
 {% block content %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="flash-container">
+    {% for category, message in messages %}
+    <div class="flash-message flash-{{ category }}">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+
 <div class="container">
     <h1>Select Trimester</h1>
 
     <form method="POST">
     {% if trimester %}
-        <p>Trimester: {{ trimester.term }} - {{ trimester.name }}</p>
+        <p>
+            Trimester: {{ trimester.term }}<br>
+            {{ trimester.name }}
+        </p>
         <input type="hidden" name="trimester_id" value="{{ trimester.id }}">
         <button type="submit">Next</button>
     {% else %}

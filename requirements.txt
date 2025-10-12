@@ -1,8 +1,8 @@
-Flask==2.3.2
-Flask-MySQLdb==1.0.1
-PyMySQL==1.0.3
-PyYAML==6.0
-Flask-Bcrypt==1.0.1
-numpy==1.23.5
-scipy==1.11.3
-mysqlclient==2.1.1
+Flask
+Flask-MySQLdb
+PyMySQL
+PyYAML
+Flask-Bcrypt
+numpy
+scipy
+mysqlclient
