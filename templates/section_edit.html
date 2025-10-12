@@ -44,14 +44,6 @@
     <!-- Main content area -->
     <div class="content">
         <h1>Edit Section</h1>
-
-        <!-- Status message area -->
-        {% if status_message %}
-        <div class="status-message {% if 'Error' in status_message %}error{% else %}success{% endif %}">
-            {{ status_message }}
-        </div>
-        {% endif %}
-
         <form method="POST" action="{{ url_for('edit_section', section_id=section.id) }}">
             <div>
                 <label for="section_name">Section Name:</label>

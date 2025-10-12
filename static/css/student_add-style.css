@@ -1,18 +1,11 @@
-.manage-room-wrapper {
+.manage-student-wrapper {
     background-color: #ffffff;
-    max-width: 900px;
+    max-width: 800px;
     border-radius: 15px;
-    margin: 0 auto;
+    margin: 50px auto;
     padding: 30px;
     box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.1);
     display: flex;
-    margin-top: 50px;
-}
-
-h1 {
-    margin-bottom: 20px;
-    font-weight: bold;
-    text-align: center;
 }
 
 /* Sidebar */
@@ -35,7 +28,6 @@ h1 {
     width: 50px;
     height: 50px;
     margin-bottom: 20px;
-    background-color: transparent;
     border-radius: 15px;
     cursor: pointer;
     transition: background-color 0.3s, color 0.3s;
@@ -63,59 +55,57 @@ h1 {
     background-color: transparent; /* No background change */
 }
 
+/* Content Area */
 .content {
     flex-grow: 1;
     padding-left: 30px;
 }
 
-.request-table {
-    width: 100%;
-    border-collapse: collapse;
+h1 {
     margin-bottom: 20px;
-}
-
-.request-table th, .request-table td {
-    border: 1px solid #ccc;
-    padding: 10px;
-}
-
-.request-table th {
-    background-color: #f4f4f4;
     font-weight: bold;
-    text-align: left;
+    text-align: center;
 }
 
-.request-table td {
-    background-color: #fff;
+form {
+    font-size: 1.1em;
+    max-width: 800px;
+    margin-top: 20px;
 }
 
-h2 {
+form div {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
     font-weight: bold;
-}
-
-/* Buttons for approve/reject */
-.button-row {
-    display: flex;           /* Ensure flexbox is applied */
-    justify-content: center; /* Center the buttons */
-    gap: 10px;               /* Apply the gap between buttons */
-}
-
-.btn {
-    padding: 10px 20px;
-    background-color: #1a1b2d;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+    margin-bottom: 5px;
     font-size: 1em;
 }
 
-.btn:hover {
-    background-color: #30334f;
+input, select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 1em;
 }
 
-.no-requests-message {
-    text-align: center;
+button {
+    padding: 10px 20px;
+    background-color: #1a1b2d;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-size: 1em;
+}
+
+button:hover {
+    background-color: #30334f;
 }
 
 .flash-container {
@@ -127,59 +117,23 @@ h2 {
     padding: 10px;
   }
   
-.flash-message {
+  .flash-message {
     width: auto;
     padding: 12px 16px;
     border-radius: 5px;
     font-size: 20px;
     text-align: center;
     display: none;
-}
+  }
   
-.flash-success {
+  .flash-success {
     background-color: #d4edda;
     color: #155724;
     border: 1px solid #c3e6cb;
-}
+  }
   
-.flash-error {
+  .flash-error {
     background-color: #f8d7da;
     color: #721c24;
     border: 1px solid #f5c6cb;
-}
-
-.flash-info {
-    background-color: #d1ecf1;
-    color: #0c5460;
-    border: 1px solid #bee5eb;
-}
-
-/* Status chips for responder approval visibility */
-.status-chip {
-    display: inline-block;
-    padding: 4px 10px;
-    border-radius: 12px;
-    font-size: 12px;
-    background: #f0f0f0;
-    color: #333;
-}
-
-/* Right-align status chip in table header */
-.request-table th[colspan="3"] {
-    text-align: right;
-}
-.status-chip.approved {
-    background: #e6f7ed;
-    color: #0e7a3d;
-    border: 1px solid #a8e0bf;
-}
-.status-chip.pending {
-    background: #fff8e1;
-    color: #8a6d3b;
-    border: 1px solid #ffe08a;
-}
-.status-chip.rejected {
-    background: #fdecea;
-    color: #a94442;
-    border: 1px solid #f5c6cb;
-}
+  }

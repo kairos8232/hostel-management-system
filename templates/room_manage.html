@@ -51,15 +51,8 @@
     <main class="content">
         <h1>Manage Rooms</h1>
 
-        <!-- Status Message -->
-        {% if status_message %}
-        <div class="status-message {% if 'Error' in status_message %}error{% else %}success{% endif %}">
-            {{ status_message }}
-        </div>
-        {% endif %}
-
         <!-- Filter Form -->
-        <form method="POST" action="{{ url_for('manage_rooms') }}">
+        <form method="GET" action="{{ url_for('manage_rooms') }}">
             <div class="form-group">
                 <label for="hostel_id">Filter by Hostel:</label>
                 <select name="hostel_id" id="hostel_id" onchange="this.form.submit()">
@@ -73,6 +66,7 @@
             </div>
         </form>
 
+
         <!-- Rooms Table -->
         <table>
             <thead>
@@ -81,7 +75,7 @@
                     <th>Hostel</th>
                     <th>Category</th>
                     <th>Price</th>
-                    <th>Status</th>
+                    <th>Occupancy</th>
                     <th>Options</th>
                 </tr>
             </thead>
@@ -92,7 +86,7 @@
                     <td>{{ room.hostel_name }}</td>
                     <td>{{ room.category }}</td>
                     <td>{{ room.price }}</td>
-                    <td>{{ room.status }}</td>
+                    <td>{{ room.occupied_count|default(0) }}/{{ room.capacity }}</td>
                     <td>
                         <a href="{{ url_for('edit_room', room_number=room.number) }}" class="btn">Edit</a>
                         <form action="{{ url_for('delete_room', room_number=room.number) }}" method="POST">

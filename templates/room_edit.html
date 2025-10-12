@@ -49,13 +49,6 @@
   <!-- Main content area -->
   <div class="content">
     <h1>Room Number: {{ room.number }}</h1>
-      <!-- Status message area -->
-      {% if status_message %}
-      <div class="status-message {% if 'Error' in status_message %}error{% else %}success{% endif %}">
-          {{ status_message }}
-      </div>
-      {% endif %}
-
       <form method="POST" action="{{ url_for('edit_room', room_number=room.number) }}">
         <div>
           <label for="hostel_id">Hostel:</label>

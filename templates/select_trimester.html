@@ -5,16 +5,42 @@
 {% endblock %}
 
 {% block content %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="flash-container">
+    {% for category, message in messages %}
+    <div class="flash-message flash-{{ category }}">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+
 <div class="container">
     <h1>Select Trimester</h1>
+
     <form method="POST">
-        <label for="trimester">Choose a trimester:</label>
-        <select name="trimester" id="trimester">
-            {% for trimester in trimesters %}
-            <option value="{{ trimester.id }}">{{ trimester.term }} - {{ trimester.name }} </option>
-            {% endfor %}
-        </select>
-        <button type="submit">Continue</button>
+    {% if trimester %}
+        <p>
+            Trimester: {{ trimester.term }}<br>
+            {{ trimester.name }}
+        </p>
+        <input type="hidden" name="trimester_id" value="{{ trimester.id }}">
+        <button type="submit">Next</button>
+    {% else %}
+        <p>Not available right now.</p>
+    {% endif %}
     </form>
 </div>
+
+<script>
+    const flashMessages = document.querySelectorAll('.flash-message');
+    flashMessages.forEach(message => {
+      message.style.display = 'block';
+      setTimeout(() => {
+        message.style.display = 'none';
+      }, 3000); // Hide after 3 seconds
+    });
+</script>
+
 {% endblock %}

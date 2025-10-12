@@ -19,19 +19,22 @@
         {% endif %}
         {% endwith %}
 
+        {% if default_trimester %}
         <div class="room-setting">
             <table class="room-info-table">
                 <tr>
+                    <th>Trimester Term</th>
                     <th>Hostel</th>
                     <th>Room Number</th>
                     <th>Room Type</th>
                     <th>Bed Number</th>
                 </tr>
                 <tr>
+                    <td>{{ booking.trimester_term }}</td>
                     <td>{{ booking.hostel_name }}</td>
                     <td>{{ booking.room_no }}</td>
                     <td>{{ booking.room_type }}</td>
-                    <td>{{ booking.bed_number }}</td>
+                    <td>{{ booking.bed_letter }}</td>
                 </tr>
             </table>
             
@@ -44,6 +47,7 @@
             <div id="roomChangeForm" style="display: none;">
                 <h3 class="form-title">Room Change Request</h3>
                 <form action="{{ url_for('request_room_change') }}" method="post">
+                    <input type="hidden" name="trimester_id" value="{{ booking.trimester_id }}">
                     <div class="form-group">
                         <label for="reason">Reason for Room Change:</label>
                         <textarea id="reason" name="reason" required></textarea>
@@ -56,6 +60,7 @@
             <div id="swapRoomForm" style="display: none;">
                 <h3 class="form-title">Room Swap Request</h3>
                 <form action="{{ url_for('request_room_swap') }}" method="post">
+                    <input type="hidden" name="trimester_id" value="{{ booking.trimester_id }}">
                     <div class="form-group">
                         <label for="other_student_id">Other Student ID:</label>
                         <input type="text" id="other_student_id" name="other_student_id" required>
@@ -67,46 +72,50 @@
                     <button type="submit" class="btn btn-primary">Check Availability</button>
                 </form>
             </div>
+        {% else %}
+        <p>No default trimester is set.</p>
+        {% endif %}
         </div>
 
-<!-- Pending Room Swap Requests -->
-<div class="pending-swaps">
-    {% if pending_swaps %}
-        <h3>Pending Room Swap Requests</h3>
-        <table class="pending-swap-table">
-            <thead>
-                <tr>
-                    <th>Requester Name</th>
-                    <th>Requester Room</th>
-                    <th>Requester Bed</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for swap in pending_swaps %}
-                <tr>
-                    <td>{{ swap.requester_name }}</td>
-                    <td>{{ swap.requester_room }}</td>
-                    <td>{{ swap.requester_bed }}</td>
-                    <td>
-                        <form action="{{ url_for('respond_to_swap') }}" method="post" style="display:inline;">
-                            <input type="hidden" name="swap_request_id" value="{{ swap.id }}">
-                            <input type="hidden" name="response" value="approve">
-                            <button type="submit" class="btn btn-success">Approve</button>
-                        </form>
-                        <form action="{{ url_for('respond_to_swap') }}" method="post" style="display:inline;">
-                            <input type="hidden" name="swap_request_id" value="{{ swap.id }}">
-                            <input type="hidden" name="response" value="reject">
-                            <button type="submit" class="btn btn-danger">Reject</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% endif %}
-</div>
-
+        <!-- Pending Room Swap Requests -->
+        <div class="pending-swaps">
+            {% if pending_swaps %}
+                <h3>Pending Room Swap Requests</h3>
+                <table class="pending-swap-table">
+                    <thead>
+                        <tr>
+                            <th>Requester Name</th>
+                            <th>Requester Room</th>
+                            <th>Requester Bed</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for swap in pending_swaps %}
+                        <tr>
+                            <td>{{ swap.requester_name }}</td>
+                            <td>{{ swap.requester_room }}</td>
+                            <td>{{ swap.requester_bed }}</td>
+                            <td>
+                                <form action="{{ url_for('respond_to_swap') }}" method="post" style="display:inline;">
+                                    <input type="hidden" name="swap_request_id" value="{{ swap.swap_id }}">
+                                    <input type="hidden" name="trimester_id" value="{{ booking.trimester_id }}">
+                                    <input type="hidden" name="response" value="approve">
+                                    <button type="submit" class="btn btn-success">Approve</button>
+                                </form>
+                                <form action="{{ url_for('respond_to_swap') }}" method="post" style="display:inline;">
+                                    <input type="hidden" name="swap_request_id" value="{{ swap.swap_id }}">
+                                    <input type="hidden" name="trimester_id" value="{{ booking.trimester_id }}">
+                                    <input type="hidden" name="response" value="reject">
+                                    <button type="submit" class="btn btn-danger">Reject</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        </div>
     </div>
 </div>
 

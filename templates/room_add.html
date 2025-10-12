@@ -49,13 +49,6 @@
     <main class="content">
         <h1>Add a New Room</h1>
 
-        <!-- Status Message -->
-        {% if status_message %}
-        <div class="status-message {% if 'Error' in status_message %}error{% else %}success{% endif %}">
-            {{ status_message }}
-        </div>
-        {% endif %}
-
         <!-- Add Room Form -->
         <form action="{{ url_for('add_room') }}" method="POST">
             <div class="form-group">

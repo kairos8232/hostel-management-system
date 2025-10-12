@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/trimester_manage-style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+  <div class="flash-container">
+    {% for category, message in messages %}
+      <div class="flash-message flash-{{ category }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+{% endif %}
+{% endwith %}
+
+<div class="manage-trimester-wrapper">
+    <nav class="sidebar">
+        <div class="menu-item inactive" id="addBtn" onclick="location.href='{{ url_for('add_trimester') }}';">
+            <p class="fas fa-plus"></p>
+        </div>
+        <div class="menu-item inactive" id="editBtn" onclick="location.href='{{ url_for('manage_trimesters') }}';">
+            <p class="fas fa-edit"></p>
+        </div>
+    </nav>
+    <main class="content">
+        <h1>Manage Trimester</h1>
+        
+        <div class="default-trimester-card">
+            <div class="default-trimester-header">
+                <h3>
+                    {% if default_trimester %}
+                        <i class="fas fa-check-circle"></i> Default Trimester
+                    {% else %}
+                        <i class="fas fa-exclamation-triangle"></i> No Default Trimester
+                    {% endif %}
+                </h3>
+            </div>
+            <div class="default-trimester-content">
+                {% if default_trimester %}
+                    <p>Trimester {{ default_trimester.term }}, {{ default_trimester.name }}</p>
+                    <form method="POST" action="{{ url_for('manage_trimesters') }}" class="remove-default-form">
+                        <input type="hidden" name="action" value="remove_default">
+                        <button type="submit" class="remove-default-btn">Remove Default</button>
+                    </form>
+                {% else %}
+                    <p>You can set a default trimester from the list below.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Term</th>
+                    <th>Name</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for trimester in trimesters %}
+                <tr>
+                    <td>{{ trimester.term }}</td>
+                    <td>{{ trimester.name }}</td>
+                    <td>
+                        <a href="{{ url_for('edit_trimester', trimester_id=trimester.id) }}">Edit</a>
+                        <form method="POST" action="{{ url_for('manage_trimesters') }}">
+                            <input type="hidden" name="action" value="set_default">
+                            <input type="hidden" name="trimester_id" value="{{ trimester.id }}">
+                            <button type="submit" class="remove-default-btn">Set Default</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </main>
+</div>
+
+<script>
+    const flashMessages = document.querySelectorAll('.flash-message');
+    flashMessages.forEach(message => {
+      message.style.display = 'block';
+      setTimeout(() => {
+        message.style.display = 'none';
+      }, 3000); // Hide after 3 seconds
+    });
+</script>
+
+{% endblock %}

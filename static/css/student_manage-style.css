@@ -1,0 +1,193 @@
+/* General Wrapper */
+.manage-student-wrapper {
+    background-color: #ffffff;
+    max-width: 1400px;
+    border-radius: 15px;
+    margin: 0 auto;
+    padding: 30px;
+    box-shadow: 0px 6px 12px #0000001a;
+    display: flex;
+    margin-top: 50px;
+}
+
+/* Sidebar */
+.sidebar {
+    background-color: #1a1b2d;
+    padding: 20px;
+    width: 50px;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-radius: 30px;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    margin-bottom: 20px;
+    background-color: transparent;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+    color: #ffffff;
+}
+
+.menu-item p {
+    font-size: 24px;
+}
+
+.menu-item:hover {
+    background-color: #30334f;
+}
+
+
+.content {
+    flex-grow: 1;
+    padding-left: 30px;
+}
+
+h1 {
+    margin-bottom: 20px;
+    font-weight: bold;
+    text-align: center;
+}
+
+label {
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+select {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 200px;
+    font-size: 16px;
+}
+
+/* Table Styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    text-align: left;
+}
+
+table thead {
+    background-color: #1a1b2d;
+    color: #ffffff;
+    font-size: 1.2em;
+}
+
+table th, table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #ddd;
+}
+
+table th {
+    font-weight: bold;
+    text-align: left;
+}
+
+/* Buttons (Edit/Delete) */
+table td a, 
+table td button {
+    background-color: #1a1b2d;
+    color: #ffffff;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    margin-right: 10px;
+    font-size: 16px;
+}
+
+table td a:hover,
+table td button:hover {
+    background-color: #30334f;
+}
+
+/* Inline Form (Delete button inside table) */
+table td form {
+    display: inline;
+}
+.flash-container {
+    position: fixed; /* Stick it at the top */
+    top: 7.5%;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    padding: 10px;
+  }
+  
+  .flash-message {
+    width: auto;
+    padding: 12px 16px;
+    border-radius: 5px;
+    font-size: 20px;
+    text-align: center;
+    display: none;
+  }
+  
+  .flash-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+  }
+  
+  .flash-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+  }
+
+/* Overall container for both forms */
+.form-container {
+    display: flex;              /* Use Flexbox for alignment */
+    justify-content: flex-start; /* Align items to the start */
+    align-items: center;         /* Center items vertically */
+    gap: 30px;                   /* Add gap between forms */
+}
+
+/* Styling for individual form groups */
+.form-group {
+    margin-right: 0px;       /* Space between form elements */
+}
+
+/* Input field styling */
+input[type="text"] {
+    padding: 8px;             /* Inner spacing for input */
+    border: 1px solid #ccc;  /* Border styling */
+    border-radius: 4px;      /* Rounded corners */
+    font-size: 14px;         /* Font size for input */
+}
+
+/* Button styling */
+button {
+    padding: 8px 12px;       /* Inner spacing for button */
+    background-color: #007bff; /* Primary color for button */
+    color: white;            /* Text color */
+    border: none;            /* Remove default border */
+    border-radius: 4px;     /* Rounded corners */
+    cursor: pointer;         /* Change cursor on hover */
+    font-size: 14px;         /* Font size for button */
+    transition: background-color 0.3s; /* Transition effect */
+}
+
+/* Button hover effect */
+button:hover {
+    background-color: #0056b3; /* Darker shade on hover */
+}
+
+/* Label styling */
+label {
+    margin-right: 5px;       /* Space between label and select */
+    font-weight: bold;       /* Bold font for labels */
+}

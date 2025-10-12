@@ -52,12 +52,13 @@
         {% if swap_requests %}
             {% for request in swap_requests %}
                 <div class="request-card">
-                    <h2>Request #{{ request.id }}</h2>
+                    <h2>Request #{{ request.swap_id }}</h2>
                     
                     <!-- Swap Request Details -->
                     <table class="request-table">
                         <tr>
-                            <th colspan="5">Hostel: {{ request.hostel_name }}</th>
+                            <th colspan="2">Hostel: {{ request.hostel_name }}</th>
+                            <th colspan="3">Trimester Term: {{ request.trimester_term }}</th>
                         </tr>
 
                         <!-- Requester Information -->
@@ -81,7 +82,14 @@
 
                         <!-- Responder Information -->
                         <tr>
-                            <th colspan="5">Responder</th>
+                            <th colspan="2">Responder</th>
+                            <th colspan="3">
+                                {% if request.status == 'approved_by_student' %}
+                                    <span class="status-chip approved">Responder approved ✓</span>
+                                {% elif request.status == 'pending' %}
+                                    <span class="status-chip pending">Awaiting responder approval…</span>
+                                {% endif %}
+                            </th>
                         </tr>
                         <tr>
                             <th>Student ID</th>
@@ -108,7 +116,7 @@
                             <td colspan="5">
                                 <form action="{{ url_for('process_room_swap') }}" method="POST">
                                     <div class="button-row">
-                                        <input type="hidden" name="swap_request_id" value="{{ request.id }}">
+                                        <input type="hidden" name="swap_request_id" value="{{ request.swap_id }}">
                                         <button type="submit" name="action" value="approve" class="btn">Approve</button>
                                         <button type="submit" name="action" value="reject" class="btn">Reject</button>
                                     </div>

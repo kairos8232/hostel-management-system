@@ -48,7 +48,7 @@
     <main class="content">
         <h1>Manage Hostels</h1>
         
-        <form method="POST" action="{{ url_for('manage_hostels') }}">
+        <form method="GET" action="{{ url_for('manage_hostels') }}">
             <div class="form-group">
                 <label for="gender">Select Gender:</label>
                 <select name="gender" id="gender" onchange="this.form.submit()">

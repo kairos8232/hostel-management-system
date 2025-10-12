@@ -11,18 +11,21 @@
         <h3>Swap Details:</h3>
         <table class="swap-info-table">
             <tr>
+                <th>Trimester Term</th>
                 <th>Other Student ID</th>
                 <th>Other Student Room</th>
                 <th>Other Student Bed</th>
             </tr>
             <tr>
+                <td>{{ trimester_term }}</td> <!-- Display the trimester term -->
                 <td>{{ other_student.id }}</td>
                 <td>{{ other_student.room_no }}</td>
-                <td>{{ other_student.bed_number }}</td>
+                <td>{{ other_student.bed_letter }}</td>
             </tr>
         </table>
     </div>
     <form action="{{ url_for('confirm_room_swap') }}" method="post">
+        <input type="hidden" name="trimester_id" value="{{ trimester_id }}"> <!-- Pass trimester_id back -->
         <input type="hidden" name="other_student_id" value="{{ other_student.id }}">
         <div class="form-group">
             <label for="reason">Reason for Room Swap:</label>
