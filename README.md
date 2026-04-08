@@ -1,102 +1,112 @@
-# 🏠 Mini Hostel Management System (eHostel)
+# 🏠 eHostel — Hostel Management System
 
-A **web-based hostel management system** for university students and admins, built with **Flask** and **MySQL**.  
-Students can book rooms, form groups, request swaps, and chat — while admins manage hostels, announcements, and approvals.
+**eHostel** is a full-stack web application that streamlines hostel living for both residents and administrators. From booking a room and forming groups with housemates, to requesting room swaps and chatting in real time — eHostel brings the entire hostel experience into one clean, unified platform.
+
+Built with **Python (Flask)** on the backend and a **MySQL** database, the system supports two distinct user experiences: a **Student Portal** for day-to-day living needs, and an **Admin Portal** for full operational control.
+
+What sets it apart: a **smart roommate matching engine** (cosine similarity on survey responses), a **group booking flow** where students form and invite members before selecting rooms together, a **room swap/change approval workflow**, and **in-app chat** — all within a trimester-aware booking system.
 
 ---
 
 ## ✨ Features
 
 ### 🎓 Student Portal
-- Book hostel rooms and beds (individual or group)
-- View and manage existing bookings
-- Request room changes or swaps
-- Create and manage groups (invitations, leadership, etc.)
-- Chat (individual and group)
-- Update profile and complete pre-booking survey
+- Complete a preference survey before booking (used for roommate matching)
+- Book hostel rooms and beds — individually or as a group
+- View and manage current bookings
+- Request room changes or swaps with other students
+- Create and manage groups — invite members, transfer leadership
+- Chat one-on-one or in group threads
+- Update profile info and profile picture
 
 ### 🛠️ Admin Portal
-- Manage students, rooms, beds, hostels, and trimesters
-- Approve/reject room change and swap requests
-- Post announcements
-- Dashboard with statistics and summaries
+- Dashboard with live stats and summaries
+- Manage hostels, rooms, beds, students, and trimesters
+- Approve or reject room change and swap requests
+- Post announcements targeted to specific trimesters or all students
+- Full CRUD control over core entities
 
 ---
 
 ## 🧰 Tech Stack
 
-| Layer | Technology |
-|-------|-------------|
-| Backend | Python 3.10+ (Flask) |
-| Database | MySQL 8.x |
-| Frontend | HTML, CSS (custom per-page), JavaScript (minimal) |
-| Templates | Jinja2 |
-| Security | bcrypt (password hashing) |
+| Layer      | Technology                                      |
+|------------|-------------------------------------------------|
+| Backend    | Python 3.10+, Flask                             |
+| Database   | MySQL 8.x                                       |
+| Frontend   | HTML, CSS (per-page), JavaScript                |
+| Templating | Jinja2                                          |
+| Auth       | Flask-Bcrypt (password hashing)                 |
+| ML/Maths   | NumPy, SciPy (cosine similarity for matching)   |
 
 ---
 
-## ⚙️ Setup Instructions
+## 🚀 Running Locally
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/eHostel.git
-   cd eHostel
-   ```
-2. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. **Set up the MySQL database**
-   - Ensure MySQL is running.
-   - Import the schema and sample data:
-   ```bash
-   mysql -u root -p < flaskapp.sql
-   ```
-   - Edit db.yaml to match your MySQL credentials.
-4. Run the Flask app
-   ```bash
-   python main.py
-   ```
-   The app runs at http://127.0.0.1:5000 by default.
-5. Login Credentials
-   ```yaml
-   # Admin Account
-   username: 1234
-   password: password1
-   ```
-   ```yaml
-   # Student Accounts
-   username: 1–15
-   password: password1
-   ```
-   All student accounts (IDs 1 to 15) share the same default password for testing and demo purposes.
+**Prerequisites:** Python 3.10+, MySQL 8.x
 
----
-
-## 🧱 File Structure
 ```bash
-eHostel/
-│
-├── main.py               # Main Flask application
-├── requirements.txt      # Python dependencies
-├── db.yaml               # Database connection config
-├── flaskapp.sql          # MySQL schema and seed data
-│
-├── templates/            # Jinja2 HTML templates
-│
-└── static/
-    ├── css/              # Per-page CSS
-    ├── images/           # Profile and hostel images
-    └── uploads/          # User-uploaded files
+# 1. Clone the repo
+git clone https://github.com/kairos8232/eHostel.git
+cd eHostel
+
+# 2. Install dependencies
+pip install -r requirements.txt
+
+# 3. Import the database
+mysql -u root -p < flaskapp.sql
+
+# 4. Configure your DB credentials
+#    Edit db.yaml — set mysql_host, mysql_user, mysql_password, mysql_db
+
+# 5. Start the app
+python main.py
 ```
 
+App will be running at **http://127.0.0.1:5000**
+
+### Demo Credentials
+
+| Role    | Username | Password    |
+|---------|----------|-------------|
+| Admin   | `1234`   | `password1` |
+| Student | `1`–`15` | `password1` |
+
+> All 15 student accounts share the same default password for demo/testing purposes.
+
 ---
 
-## 🔑 Key Modules
-- Authentication: Student/admin login & session management
-- Booking: Room/bed selection (group or individual), confirmation
-- Room Change/Swap: Requests and admin approvals
-- Group Management: Create/join/leave groups, invite members
-- Admin Management: Students, rooms, hostels, trimesters, requests
-- Chat: Individual and group chat features
-- Survey: Student satisfaction or preference survey before booking
+## 🔑 Core Modules
+
+| Module              | Description                                                   |
+|---------------------|---------------------------------------------------------------|
+| **Authentication**  | Role-based login (student/admin), session management, bcrypt  |
+| **Survey**          | Preference form completed before first booking                |
+| **Booking**         | Individual and group room/bed selection flow                  |
+| **Room Swap/Change**| Student-initiated requests with admin approval workflow       |
+| **Group Management**| Create, join, invite, and manage housing groups               |
+| **Chat**            | Real-time-style individual and group messaging                |
+| **Announcements**   | Admin broadcasts scoped by trimester                          |
+| **Admin Dashboard** | Stats, management tables, and approval queues                 |
+
+---
+
+## 🗂️ Project Structure
+
+```
+eHostel/
+│
+├── main.py               # All routes and application logic
+├── requirements.txt      # Python dependencies
+├── db.yaml               # Database connection config
+├── flaskapp.sql          # MySQL schema + seed data
+│
+├── templates/            # Jinja2 HTML templates
+│   ├── (student views)
+│   └── (admin views)
+│
+└── static/
+    ├── css/              # Per-page stylesheets
+    ├── images/           # Default and hostel images
+    └── uploads/          # User-uploaded profile pictures
+```
